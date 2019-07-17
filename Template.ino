@@ -86,7 +86,7 @@ void showhanzi(unsigned int x, unsigned int y, unsigned char index)
 
 void setup(void)
 {
-	Serial.begin(9600);
+	Serial.begin(115200);
 	uint32_t when = millis();
 	//    while (!Serial) ;   //hangs a Leonardo until you connect a Serial
 	if (!Serial)
@@ -288,11 +288,14 @@ typedef struct
 TEST result[12];
 
 #define RUNTEST(n, str, test)      \
-	{                              \
-		result[n].msg = PSTR(str); \
-		result[n].ms = test;       \
-		delay(500);                \
-	}
+{                              \
+	result[n].msg = PSTR(str); \
+	result[n].ms = test;       \
+	delay(500);                \
+}
+
+#define printToSerialAndTft(what) {tft.print(what); Serial.print(what);}
+#define printlnToSerialAndTft(what) {tft.println(what); Serial.println(what);}
 
 void runtests(void)
 {
@@ -347,26 +350,29 @@ void runtests(void)
 		}
 		uint8_t cnt = len;
 		while ((c = pgm_read_byte(str++)) && cnt--)
-			tft.print(c);
-		tft.print(" ");
-		tft.println(result[i].ms);
+			printToSerialAndTft(c);
+
+		printToSerialAndTft(' ');
+		printlnToSerialAndTft(result[i].ms);
+
 		total += result[i].ms;
 	}
 	tft.setTextSize(2);
-	tft.print("Total:");
-	tft.print(0.000001 * total);
-	tft.println("sec");
+	printToSerialAndTft("Total: ");
+	const float totalSeconds = 1e-6f * total;
+	printlnToSerialAndTft(totalSeconds); 
+
 	g_identifier = tft.readID();
 	tft.print("ID: 0x");
 	tft.println(tft.readID(), HEX);
 	//    tft.print("Reg(00):0x");
 	//    tft.println(tft.readReg(0x00), HEX);
-	tft.print("F_CPU:");
-	tft.print(0.000001 * F_CPU);
+	tft.print("F_CPU: ");
+	tft.print(1e-6f * F_CPU);
 #if defined(__OPTIMIZE_SIZE__)
-	tft.println("MHz -Os");
+	tft.println(" MHz -Os");
 #else
-	tft.println("MHz");
+	tft.println(" MHz");
 #endif
 
 	delay(10000);
